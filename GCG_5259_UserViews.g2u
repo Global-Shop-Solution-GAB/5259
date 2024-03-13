@@ -1,0 +1,716 @@
+﻿Program.Sub.ScreenSU.Start
+Gui.FormUserViews..Create
+Gui.FormUserViews..Caption("Schedule User Views")
+Gui.FormUserViews..Size(8085,8520)
+Gui.FormUserViews..MinX(7335)
+Gui.FormUserViews..MinY(7470)
+Gui.FormUserViews..Position(0,0)
+Gui.FormUserViews..BackColor(-2147483633)
+Gui.FormUserViews..MousePointer(0)
+Gui.FormUserViews..Event(UnLoad,FormUserViews_UnLoad)
+Gui.FormUserViews.lblGroup.Create(Label,"Security Group :",True,1305,255,0,105,135,True,0,"Arial",8,-2147483633,0)
+Gui.FormUserViews.txtGroup.Create(TextBox,"",True,1215,300,0,150,330,True,0,"Arial",8,-2147483643,1)
+Gui.FormUserViews.txtGroup.MaxLength(8)
+Gui.FormUserViews.txtGroup.Event(LostFocus,txtGroup_LostFocus)
+Gui.FormUserViews.cmdGroupBrowser.Create(Button)
+Gui.FormUserViews.cmdGroupBrowser.Size(375,375)
+Gui.FormUserViews.cmdGroupBrowser.Position(1395,300)
+Gui.FormUserViews.cmdGroupBrowser.Caption("^")
+Gui.FormUserViews.cmdGroupBrowser.Event(Click,cmdGroupBrowser_Click)
+Gui.FormUserViews.txtDescription.Create(TextBox,"",True,4095,300,0,1875,345,False,0,"Arial",8,-2147483643,1)
+Gui.FormUserViews.txtDescription.Locked(True)
+Gui.FormUserViews.lblGroupDescription.Create(Label,"Description :",True,1020,255,0,1875,135,True,0,"Arial",8,-2147483633,0)
+Gui.FormUserViews.gsgcUsers.Create(GsGridControl)
+Gui.FormUserViews.gsgcUsers.Size(7665,2220)
+Gui.FormUserViews.gsgcUsers.Position(150,1440)
+Gui.FormUserViews.gsgcUsers.Anchor(13)
+Gui.FormUserViews.lblUsers.Create(Label,"Users :",True,1935,255,0,105,1230,True,0,"Arial",8,-2147483633,0)
+Gui.FormUserViews.lblColumns.Create(Label,"Columns :",True,855,255,0,105,3945,True,0,"Arial",8,-2147483633,0)
+Gui.FormUserViews.gsgcColumns.Create(GsGridControl)
+Gui.FormUserViews.gsgcColumns.Size(7665,3570)
+Gui.FormUserViews.gsgcColumns.Position(150,4155)
+Gui.FormUserViews.gsgcColumns.Anchor(15)
+Gui.FormUserViews.cmdSave.Create(Button)
+Gui.FormUserViews.cmdSave.Size(855,375)
+Gui.FormUserViews.cmdSave.Position(6045,315)
+Gui.FormUserViews.cmdSave.Caption("Save")
+Gui.FormUserViews.cmdSave.Event(Click,cmdSave_Click)
+Gui.FormUserViews.cmdSave.Anchor(9)
+Gui.FormUserViews.cmdClear.Create(Button)
+Gui.FormUserViews.cmdClear.Size(855,375)
+Gui.FormUserViews.cmdClear.Position(6960,315)
+Gui.FormUserViews.cmdClear.Caption("Clear")
+Gui.FormUserViews.cmdClear.Event(Click,cmdClear_Click)
+Gui.FormUserViews.cmdClear.Anchor(9)
+Gui.FormUserViews.chkAdmin.Create(CheckBox)
+Gui.FormUserViews.chkAdmin.Size(1350,360)
+Gui.FormUserViews.chkAdmin.Position(3540,780)
+Gui.FormUserViews.chkAdmin.Caption("Admin Group")
+Gui.FormUserViews.chkAdmin.Event(Click,chkAdmin_Click)
+Gui.FormUserViews.lblDepartment.Create(Label,"Department :",True,1035,255,0,105,885,True,0,"Arial",8,-2147483633,0)
+Gui.FormUserViews.ddlDepartment.Create(DropDownList)
+Gui.FormUserViews.ddlDepartment.Size(2175,330)
+Gui.FormUserViews.ddlDepartment.Position(1140,780)
+Gui.FormUserViews.cmdDelete.Create(Button)
+Gui.FormUserViews.cmdDelete.Size(855,375)
+Gui.FormUserViews.cmdDelete.Position(6960,7755)
+Gui.FormUserViews.cmdDelete.Caption("Delete")
+Gui.FormUserViews.cmdDelete.Event(Click,cmdDelete_Click)
+Gui.FormUserViews.cmdDelete.Enabled(False)
+Gui.FormUserViews.cmdDelete.Anchor(10)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+V.Global.sGroup.Declare(String, "")
+V.Global.bError.Declare(Boolean, False)
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+'GCG_5259_UserViews.g2u
+'Trey S
+'August 14th, 2019
+'For Acero Precision
+'Ticket FIT010-72520191405-10
+'Quote 11607-0
+'This is a maintenance menu for users to maintain a set of views for the
+'5259 movable scheduling dashboard
+
+F.Intrinsic.Control.Try
+
+F.Intrinsic.Control.CallSub(SetIcon, "FORM", "FormUserViews")
+F.Intrinsic.Control.CallSub(SetContextMenu)
+F.Intrinsic.Control.CallSub(LoadDepartmentDropDown)
+F.Intrinsic.Control.CallSub(Load)
+
+GUI.FormUserViews..Show
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.LoadBlankDataTables.Start
+'load empty datatables to display on grid
+
+F.Intrinsic.Control.Try
+
+F.Data.DataTable.Create("dtUsers", True)
+F.Data.DataTable.AddColumn("dtUsers", "User", "String")
+F.Data.DataTable.AddColumn("dtUsers", "Name", "String")
+
+F.Data.DataTable.Create("dtColumns", True)
+F.Data.DataTable.AddColumn("dtColumns", "Column", "String")
+F.Data.DataTable.AddColumn("dtColumns", "Enabled", "Boolean")
+F.Data.DataTable.AddColumn("dtColumns", "Index", "Long")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.LoadBlankDataTables.End
+
+Program.Sub.LoadUserGrid.Start
+'create user grid and set properties
+
+F.Intrinsic.Control.Try
+
+GUI.FormUserViews.gsgcUsers.AddGridviewFromDataTable("gvUsers", "dtUsers")
+
+GUI.FormUserViews.gsgcUsers.SetGridviewProperty("gvUsers", "ReadOnly", True)
+GUI.FormUserViews.gsgcUsers.SetGridviewProperty("gvUsers", "Editable", False)
+
+F.Intrinsic.Control.CallSub(SetGridViewProperty, "FORM", "FormUserViews", "GRIDVIEW", "gvUsers", "DATATABLE", "dtUsers", "GRIDCONTROL", "gsgcUsers", "PROPERTY", "HeaderFontBold", "VALUE", True)
+
+GUI.FormUserViews.gsgcUsers.SetColumnProperty("gvUsers", "User", "MinWidth", 60)
+GUI.FormUserViews.gsgcUsers.SetColumnProperty("gvUsers", "Name", "MinWidth", 100)
+
+GUI.FormUserViews.gsgcUsers.MainView("gvUsers")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.LoadUserGrid.End
+
+Program.Sub.LoadColumnGrid.Start
+'create column grid and set properties
+
+F.Intrinsic.Control.Try
+
+GUI.FormUserViews.gsgcColumns.AddGridviewFromDataTable("gvColumns", "dtColumns")
+
+F.Intrinsic.Control.CallSub(SetGridViewProperty, "FORM", "FormUserViews", "GRIDVIEW", "gvColumns", "DATATABLE", "dtColumns", "GRIDCONTROL", "gsgcColumns", "PROPERTY", "HeaderFontBold", "VALUE", True)
+
+GUI.FormUserViews.gsgcColumns.SetColumnProperty("gvColumns", "Column", "MinWidth", 100)
+GUI.FormUserViews.gsgcColumns.SetColumnProperty("gvColumns", "Enabled", "MinWidth", 50)
+GUI.FormUserViews.gsgcColumns.SetColumnProperty("gvColumns", "Index", "MinWidth", 50)
+
+GUI.FormUserViews.gsgcColumns.SetColumnProperty("gvColumns", "Column", "ReadOnly", True)
+GUI.FormUserViews.gsgcColumns.SetColumnProperty("gvColumns", "Enabled", "ReadOnly", False)
+GUI.FormUserViews.gsgcColumns.SetColumnProperty("gvColumns", "Index", "ReadOnly", False)
+
+GUI.FormUserViews.gsgcColumns.SetColumnProperty("gvColumns", "Column", "AllowEdit", False)
+GUI.FormUserViews.gsgcColumns.SetColumnProperty("gvColumns", "Enabled", "AllowEdit", True)
+GUI.FormUserViews.gsgcColumns.SetColumnProperty("gvColumns", "Index", "AllowEdit", True)
+
+GUI.FormUserViews.gsgcColumns.SetColumnProperty("gvColumns", "Index", "SortOrder", "Ascending")
+
+GUI.FormUserViews.gsgcColumns.MainView("gvColumns")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.LoadColumnGrid.End
+
+Program.Sub.Load.Start
+'load all the data on the screen
+
+F.Intrinsic.Control.Try
+
+GUI.FormUserViews..Enabled(False)
+GUI.FormUserViews.gsgcColumns.Visible(False)
+GUI.FormUserViews.gsgcUsers.Visible(False)
+
+F.Intrinsic.Control.If(V.DataTable.dtColumns.Exists)
+	F.Data.DataTable.Close("dtColumns")
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.If(V.DataTable.dtUsers.Exists)
+	F.Data.DataTable.Close("dtUsers")
+F.Intrinsic.Control.EndIf
+
+'if empty, load blank, if not, load data
+F.Intrinsic.Control.If(V.Global.sGroup.Trim, =, "")
+	GUI.FormUserViews.cmdSave.Enabled(False)
+	GUI.FormUserViews.cmdDelete.Enabled(False)
+	F.Intrinsic.Control.CallSub(LoadBlankDataTables)
+	GUI.FormUserViews.chkAdmin.Value(0)
+	GUI.FormUserViews.ddlDepartment.Text("")
+F.Intrinsic.Control.Else
+	F.Intrinsic.Control.CallSub(LoadUsers)
+	F.Intrinsic.Control.CallSub(LoadColumns)
+	GUI.FormUserViews.cmdSave.Enabled(True)
+	GUI.FormUserViews.cmdDelete.Enabled(True)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.CallSub(LoadUserGrid)
+F.Intrinsic.Control.CallSub(LoadColumnGrid)
+
+GUI.FormUserViews.gsgcColumns.Visible(True)
+GUI.FormUserViews.gsgcUsers.Visible(True)
+GUI.FormUserViews..Enabled(True)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.Load.End
+
+Program.Sub.LoadUsers.Start
+F.Intrinsic.Control.Try
+
+V.Local.sUsers.Declare(String)
+V.Local.iCounter.Declare(Long)
+V.Local.sSQL.Declare(String)
+V.Local.sName.Declare(String)
+
+'get group members
+F.Global.Security.GetGroupMembers(V.Global.sGroup, V.Caller.CompanyCode, V.Local.sUsers)
+F.Data.DataTable.CreateFromString("dtUsers", V.Local.sUsers, "User", "String", "***NODELIMITER***", "*!*", True)
+F.Data.DataTable.AddColumn("dtUsers", "Name", "String")
+
+'get name
+F.Intrinsic.Control.For(V.Local.iCounter, 0, V.DataTable.dtUsers.RowCount--, 1)
+	F.Global.Security.GetFullName(V.DataTable.dtUsers(V.Local.iCounter).USER!FieldValTrim, V.Caller.CompanyCode, V.Local.sName)
+	F.Data.DataTable.SetValue("dtUsers", V.Local.iCounter, "NAME", V.Local.sName)
+F.Intrinsic.Control.Next(V.Local.iCounter)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.LoadUsers.End
+
+Program.Sub.LoadColumns.Start
+F.Intrinsic.Control.Try
+
+V.Local.sSQL.Declare(String)
+V.Local.sRet.Declare(String)
+V.Local.sColumns.Declare(String, "")
+
+F.Intrinsic.String.Build("select ADMIN, RTRIM(COLUMNS), RTRIM(DEPARTMENT) from GCG_5259_USER_VIEWS where GS_GROUP = '{0}'", V.Global.sGroup, V.Local.sSQL)
+
+F.Intrinsic.Control.CallSub(Connection, "CONNECT", True)
+F.ODBC.Connection!Con.ExecuteAndReturn(V.Local.sSQL, V.Local.sRet)
+F.Intrinsic.Control.CallSub(Connection, "CONNECT", False)
+
+F.Intrinsic.Control.If(V.Ambient.ExecuteAndReturnEOF)
+	GUI.FormUserViews.chkAdmin.Value(0)
+	GUI.FormUserViews.ddlDepartment.Text("")
+F.Intrinsic.Control.Else
+	F.Intrinsic.String.Split(V.Local.sRet, "*!*", V.Local.sRet)
+	GUI.FormUserViews.chkAdmin.Value(V.Local.sRet(0))
+	V.Local.sColumns.Set(V.Local.sRet(1))
+	GUI.FormUserViews.ddlDepartment.Text(V.Local.sRet(2))
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.CallSub(LoadColumnList, "COLUMNS", V.Local.sColumns)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.LoadColumns.End
+
+Program.Sub.txtGroup_LostFocus.Start
+F.Intrinsic.Control.Try
+
+V.Local.sGroup.Declare(String)
+V.Local.sRet.Declare(String)
+V.Local.sSQL.Declare(String)
+
+'check if nothing entered
+V.Local.sGroup.Set(V.Screen.FormUserViews!txtGroup.Text.Trim)
+F.Intrinsic.Control.If(V.Local.sGroup, =, V.Global.sGroup)
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+'check if a valid group was entered
+F.Intrinsic.String.Build("select RTRIM(GS_GROUP), RTRIM(DESCRIPTION) from USER_GROUPS where GS_GROUP = '{0}' and COMPANY = '{1}'", V.Local.sGroup.UCase, V.Caller.CompanyCode, V.Local.sSQL)
+F.Intrinsic.Control.CallSub(CommonConnection, "CONNECT", True)
+F.ODBC.Connection!Comm.ExecuteAndReturn(V.Local.sSQL, V.Local.sRet)
+F.Intrinsic.Control.CallSub(CommonConnection, "CONNECT", False)
+
+F.Intrinsic.Control.If(V.Ambient.ExecuteAndReturnEOF)
+	F.Intrinsic.Control.If(V.Local.sGroup.Trim, !=, "")
+		F.Intrinsic.UI.Msgbox("Invalid security group entered.")
+	F.Intrinsic.Control.EndIf
+	V.Local.sGroup.Set("")
+F.Intrinsic.Control.Else
+
+	F.Intrinsic.String.Split(V.Local.sRet, "*!*", V.Local.sRet)
+	V.Local.sGroup.Set(V.Local.sRet(0))
+	GUI.FormUserViews.txtDescription.Text(V.Local.sRet(1))
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.BlockEvents
+GUI.FormUserViews.txtGroup.Text(V.Local.sGroup)
+F.Intrinsic.Control.UnBlockEvents
+
+'load the data
+V.Global.sGroup.Set(V.Local.sGroup)
+F.Intrinsic.Control.CallSub(Load)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.txtGroup_LostFocus.End
+
+Program.Sub.cmdGroupBrowser_Click.Start
+F.Intrinsic.Control.Try
+
+V.Local.sRet.Declare(String)
+V.Local.sSQL.Declare(String)
+V.Local.sSizes.Declare(String)
+V.Local.sColumns.Declare(String)
+
+'security group browser
+F.Intrinsic.UI.Browser(15, "", V.Local.sRet)
+F.Intrinsic.Control.If(V.Local.sRet.IsNotCancel)
+	F.Intrinsic.String.Split(V.Local.sRet, "*!*", V.Local.sRet)
+	GUI.FormUserViews.txtGroup.Text(V.Local.sRet(1).Trim)
+	GUI.FormUserViews.txtDescription.Text(V.Local.sRet(4).Trim)
+	V.Global.sGroup.Set(V.Local.sRet(1).Trim)
+	F.Intrinsic.Control.CallSub(Load)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdGroupBrowser_Click.End
+
+Program.Sub.cmdSave_Click.Start
+F.Intrinsic.Control.Try
+
+V.Local.sColumns.Declare(String)
+
+GUI.FormUserViews..Enabled(False)
+F.Intrinsic.Control.CallSub(Connection, "CONNECT", True)
+
+'blank dt with correct schema for saving
+F.Data.DataTable.CreateFromSQL("dtSave", "Con", "select * from GCG_5259_USER_VIEWS")
+
+F.Data.DataView.Create("dtColumns", "dvString", 22)
+F.Data.DataView.ToString("dtColumns", "dvString", "Column*!*Enabled*!*Index", "@*@", "$&$", V.Local.sColumns)
+F.Data.DataView.Close("dtColumns", "dvString")
+
+'save data
+F.Data.DataTable.AddRow("dtSave", "GS_GROUP", V.Global.sGroup, "ADMIN", V.Screen.FormUserViews!chkAdmin.CheckedAsBoolean, "COLUMNS", V.Local.sColumns.UCase, "DEPARTMENT", V.Screen.FormUserViews!ddlDepartment.Text.Trim)
+F.Data.DataTable.SaveToDB("dtSave", "Con", "GCG_5259_USER_VIEWS", "GS_GROUP", 256)
+
+F.Data.DataTable.Close("dtSave")
+F.Intrinsic.Control.CallSub(Connection, "CONNECT", False)
+
+F.Intrinsic.UI.Msgbox("Layout successfully saved.")
+F.Intrinsic.Control.CallSub(cmdClear_Click)
+
+GUI.FormUserViews..Enabled(True)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdSave_Click.End
+
+Program.Sub.cmdClear_Click.Start
+F.Intrinsic.Control.Try
+
+GUI.FormUserViews..Enabled(False)
+
+GUI.FormUserViews.txtDescription.Text("")
+GUI.FormUserViews.txtGroup.Text("")
+V.Global.sGroup.Set("")
+
+F.Intrinsic.Control.CallSub(Load)
+GUI.FormUserViews..Enabled(True)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdClear_Click.End
+
+Program.Sub.FormUserViews_UnLoad.Start
+F.Intrinsic.Control.Try
+
+'clean up, exit
+F.Intrinsic.Control.If(V.DataTable.dtColumns.Exists)
+	F.Data.DataTable.Close("dtColumns")
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.If(V.DataTable.dtUsers.Exists)
+	F.Data.DataTable.Close("dtUsers")
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.CallSub(Connection, "CONNECT", False)
+F.Intrinsic.Control.CallSub(CommonConnection, "CONNECT", False)
+
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.FormUserViews_UnLoad.End
+
+Program.Sub.chkAdmin_Click.Start
+'admins get all columns, disable column list if admin
+
+F.Intrinsic.Control.Try
+
+'F.Intrinsic.Control.If(V.Screen.FormUserViews!chkAdmin.CheckedAsBoolean)
+'	GUI.FormUserViews.gsgcColumns.Enabled(False)
+'	GUI.FormUserViews.ddlDepartment.Enabled(False)
+'F.Intrinsic.Control.Else
+'	GUI.FormUserViews.gsgcColumns.Enabled(True)
+'	GUI.FormUserViews.ddlDepartment.Enabled(True)
+'F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.chkAdmin_Click.End
+
+Program.Sub.SetIcon.Start
+F.Intrinsic.Control.Try
+
+V.Local.sForm.Declare(String)
+V.Local.bExists.Declare(Boolean)
+V.Local.sIcon.Declare(String)
+
+V.Local.sForm.Set(V.Args.FORM)
+
+F.Intrinsic.String.Build("{0}\ART\gss2.ico",V.Caller.GlobalDir,v.Local.sIcon)
+F.Intrinsic.File.Exists(V.Local.sIcon, V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists.Not)
+	F.Intrinsic.String.Build("{0}\GAB\GAS\gss2.ico",V.Caller.PluginsDir,v.Local.sIcon)
+	F.Intrinsic.File.Exists(V.Local.sIcon, V.Local.bExists)
+	F.Intrinsic.Control.If(V.Local.bExists.Not)
+		F.Intrinsic.Control.ExitSub
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+Gui.[V.Local.sForm]..Icon(V.Local.sIcon)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.SetIcon.End
+
+Program.Sub.SetGridViewProperty.Start
+F.Intrinsic.Control.Try
+
+V.Local.sForm.Declare(String)
+V.Local.sGridView.Declare(String)
+V.Local.sDataTable.Declare(String)
+V.Local.sProperty.Declare(String)
+V.Local.sValue.Declare(String)
+V.Local.sColumns.Declare(String)
+V.Local.iCounter.Declare(Long)
+V.Local.sGridControl.Declare(String)
+
+V.Local.sForm.Set(V.Args.FORM)
+V.Local.sGridView.Set(V.Args.GRIDVIEW)
+V.Local.sDataTable.Set(V.Args.DATATABLE)
+V.Local.sProperty.Set(V.Args.PROPERTY)
+V.Local.sValue.Set(V.Args.VALUE)
+V.Local.sGridControl.Set(V.Args.GRIDCONTROL)
+
+V.Local.sColumns.Set(V.DataTable.[V.Local.sDataTable].FieldNames)
+F.Intrinsic.String.Split(V.Local.sColumns, "*!*", V.Local.sColumns)
+F.Intrinsic.Control.For(V.Local.iCounter, 0, V.Local.sColumns.UBound, 1)
+	GUI.[V.Local.sForm].[V.Local.sGridControl].SetColumnProperty(V.Local.sGridView, V.Local.sColumns(V.Local.iCounter), V.Local.sProperty, V.Local.sValue)
+F.Intrinsic.Control.Next(V.Local.iCounter)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.SetGridViewProperty.End
+
+Program.Sub.Connection.Start
+'open or close connection if necessary, keep track of all connections
+
+F.Intrinsic.Control.Try
+
+V.Static.iConnections.Declare(Long)
+
+F.Intrinsic.Control.If(V.Args.Connect)
+	F.Intrinsic.Control.If(V.Static.iConnections, =, 0)
+		F.ODBC.Connection!Con.OpenCompanyConnection
+	F.Intrinsic.Control.EndIf
+	
+	F.Intrinsic.Math.Add(V.Static.iConnections, 1, V.Static.iConnections)
+F.Intrinsic.Control.Else
+	F.Intrinsic.Control.If(V.Static.iConnections, >, 0)
+		F.Intrinsic.Math.Sub(V.Static.iConnections, 1, V.Static.iConnections)
+		
+		F.Intrinsic.Control.If(V.Static.iConnections, =, 0)
+			F.ODBC.Connection!Con.Close
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.Connection.End
+
+Program.Sub.CommonConnection.Start
+'open or close common connection if necessary, keep track of all connections
+
+F.Intrinsic.Control.Try
+
+V.Static.iConnections.Declare(Long)
+
+F.Intrinsic.Control.If(V.Args.Connect)
+	F.Intrinsic.Control.If(V.Static.iConnections, =, 0)
+		F.ODBC.Connection!Comm.OpenCommonConnection
+	F.Intrinsic.Control.EndIf
+	
+	F.Intrinsic.Math.Add(V.Static.iConnections, 1, V.Static.iConnections)
+F.Intrinsic.Control.Else
+	F.Intrinsic.Control.If(V.Static.iConnections, >, 0)
+		F.Intrinsic.Math.Sub(V.Static.iConnections, 1, V.Static.iConnections)
+		
+		F.Intrinsic.Control.If(V.Static.iConnections, =, 0)
+			F.ODBC.Connection!Comm.Close
+		F.Intrinsic.Control.EndIf
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.CommonConnection.End
+
+Program.Sub.LoadColumnList.Start
+'load the column list
+
+F.Intrinsic.Control.Try
+
+V.Local.sColumns.Declare(String)
+V.Local.sTypes.Declare(String)
+V.Local.sFields.Declare(String)
+V.Local.sColumnList.Declare(String)
+V.Local.iCounter.Declare(Long)
+
+V.Local.sFields.Set("Column*!*Enabled*!*Index")
+V.Local.sTypes.Set("String*!*Boolean*!*Long")
+'V.Local.sColumnList.Set("Work Order*!*Seq.*!*WG*!*Dept*!*Part*!*Description*!*Customer*!*Customer PO*!*Start*!*Due Date*!*WO Due Date*!*WO Sched. Due Date*!*ECYT*!*Act. hrs.*!*Rem. Hrs.*!*Order*!*Run*!*Rem.*!*Prev. Compl. Qty.*!*WIP*!*Material*!*Notes*!*Tool*!*Gage*!*QA Note*!*Srt*!*Job*!*Suffix*!*Loc*!*Prev. Seq*!*Prev. Seq Closed*!*Priority*!*Start Date*!*Operation*!*Prev. Operation*!*Pallet*!*Scrap*!*Prog*!*ACYT*!*SU*!*RT*!*QA*!*MET*!*FAI*!*Runtime*!*Prev. Scrap*!*Rem. Seconds")
+V.Local.sColumnList.Set("Select*!*+*!*-*!*WO*!*Seq.*!*New WC*!*WG*!*New WG*!*Dept*!*Part*!*Description*!*Customer*!*CUST PO*!*Start*!*OUTCELL*!*ORGDT*!*WO Due Date*!*WO Sched. Due Date*!*ESTCT*!*Act. hrs.*!*Rem. Hrs.*!*Order*!*Run*!*TO GO*!*Prev. Compl. Qty.*!*WIP*!*MAT*!*Notes*!*Srt*!*Job*!*Suffix*!*Loc*!*Prev. Seq*!*Prev. Seq Closed*!*Priority*!*Start Date*!*Operation*!*Prev. Operation*!*Pallet*!*Scrap*!*Prog*!*ACYT*!*SU*!*PUSH*!*QA*!*MET*!*FAI*!*Runtime*!*Prev. Scrap*!*REM*!*RT*!*WM*!*SCR")
+
+V.Local.sColumns.Set(V.Args.Columns)
+F.Intrinsic.Control.If(V.Local.sColumns.Trim, =, "")
+	F.Data.DataTable.CreateFromString("dtColumnTemp", V.Local.sColumnList.UCase, "Column", "String", "***NODELIMITER***", "*!*")
+	F.Data.DataTable.AddColumn("dtColumnTemp", "Enabled", "Boolean", True)
+	F.Data.DataTable.AddColumn("dtColumnTemp", "Index", "Long")
+F.Intrinsic.Control.Else
+	'fix column name changes
+	F.Intrinsic.String.Replace(V.Local.sColumns, "Work Order@*@", "WO@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$Rem.@*@", "$&$TO GO@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$Material@*@", "$&$MAT@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$Rem. Seconds@*@", "$&$REM@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$Due Date@*@", "$&$CELL DATE@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$Orig. Due Date@*@", "$&$ORG WO DATE@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$ORG WO DATE@*@", "$&$ORGDT@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$Customer PO@*@", "$&$CUST PO@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$ECYT@*@", "$&$ESTCT@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$CELL DATE@*@", "$&$OUTCELL@*@", V.Local.sColumns)
+	
+	F.Data.DataTable.CreateFromString("dtColumnTemp", V.Local.sColumns.UCase, V.Local.sFields, V.Local.sTypes, "@*@", "$&$")
+	
+	F.Data.DataView.Create("dtColumnTemp", "dvNewColumns", 22, "COLUMN = 'PUSH'", "")
+	F.Intrinsic.Control.If(V.DataView.dtColumnTemp!dvNewColumns.RowCount, =, 0)
+		F.Data.DataTable.AddRow("dtColumnTemp", "COLUMN", "PUSH", "Enabled", True, "INDEX", 999)
+	F.Intrinsic.Control.EndIf
+	F.Data.DataView.SetFilter("dtColumnTemp", "dvNewColumns", "COLUMN = 'RT'")
+	F.Intrinsic.Control.If(V.DataView.dtColumnTemp!dvNewColumns.RowCount, =, 0)
+		F.Data.DataTable.AddRow("dtColumnTemp", "COLUMN", "RT", "Enabled", True, "INDEX", 999)
+	F.Intrinsic.Control.EndIf
+	F.Data.DataView.Close("dtColumnTemp", "dvNewColumns")
+F.Intrinsic.Control.EndIf
+
+'F.Data.DataView.Create("dtColumnTemp", "dvColumnTemp", 22, "[COLUMN] <> '' and [COLUMN] <> 'Tool' and [COLUMN] <> 'Gage'", "INDEX")
+'F.Data.DataView.SetSeries("dtColumnTemp", "dvColumnTemp", "Index", 0, 10)
+'F.Data.DataView.ToDataTable("dtColumnTemp", "dvColumnTemp", "dtColumns", True)
+'F.Data.DataView.Close("dtColumnTemp", "dvColumnTemp")
+'F.Data.DataTable.Close("dtColumnTemp")
+
+F.Data.DataView.Create("dtColumnTemp", "dvColumnTemp", 22, "[COLUMN] <> '' and [COLUMN] <> 'Tool' and [COLUMN] <> 'Gage' and [COLUMN] <> 'QA Note'", "INDEX")
+F.Data.DataTable.AddColumn("dtColumnTemp", "INDEX2", Long)
+'this junk is because set series is glitchy with dataviews... sometimes it will base it on the datatable order and not the dataview order
+F.Data.DataView.SetSeries("dtColumnTemp", "dvColumnTemp", "INDEX2", 0, 10)
+F.Data.DataView.ToDataTable("dtColumnTemp", "dvColumnTemp", "dtColumns", True)
+F.Data.DataTable.SetValueFormat("dtColumns", -1, "INDEX2", "INDEX", "")
+F.Data.DataTable.RemoveColumn("dtColumns", "INDEX2")
+F.Data.DataView.Close("dtColumnTemp", "dvColumnTemp")
+F.Data.DataTable.Close("dtColumnTemp")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.LoadColumnList.End
+
+Program.Sub.ErrorMessage.Start
+'basic error message for replacing catch block
+'this is really just for when printing the message and ending program
+'pass error number, error description, current subroutine
+'optional callback sub, this will be called before ending
+'optional unattended parameters, those subs may not exist if not using them but won't be called
+F.Intrinsic.Control.Try
+
+V.Local.iError.Declare(Long)
+V.Local.sErrorDescription.Declare(String)
+V.Local.sSubroutine.Declare(String)
+V.Local.sError.Declare(String)
+V.Local.bExists.Declare(Boolean)
+V.Local.sCallback.Declare(String)
+
+V.Local.iError.Set(V.Args.ErrorNumber)
+V.Local.sErrorDescription.Set(V.Args.ErrorDescription)
+V.Local.sSubroutine.Set(V.Args.Subroutine)
+
+'make sure we aren't in an error loop
+F.Intrinsic.Control.If(V.Global.bError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndIf
+V.Global.bError.Set(True)
+
+F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}", V.Caller.ScriptFile, V.Ambient.Newline, V.Local.sSubroutine, V.Local.iError, V.Local.sErrorDescription, V.Ambient.GABVersion, V.Local.sError)
+
+F.Intrinsic.Variable.ArgExists("UNATTENDED", V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists)
+	F.Intrinsic.Control.If(V.Args.UNATTENDED)
+		'F.Intrinsic.Control.CallSub(UnattendedErrorMessage, "MESSAGE", V.Local.sError, "PROJECT", V.Args.PROJECT, "PROJECTTITLE", V.Args.PROJECTTITLE)
+	F.Intrinsic.Control.Else
+		F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.Else
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Variable.ArgExists("Callback", V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists)
+	V.Local.sCallback.Set(V.Args.Callback.Trim)
+	F.Intrinsic.Control.CallSub(V.Local.sCallback)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.ErrorMessage.End
+
+Program.Sub.LoadDepartmentDropDown.Start
+F.Intrinsic.Control.Try
+
+F.Intrinsic.Control.CallSub(Connection, "CONNECT", True)
+F.Data.DataTable.CreateFromSQL("dtDepartments", "Con", "Select distinct RTRIM(WC_DEPT) DEPT from V_WORKCENTERS where DEPT <> '' order by DEPT")
+F.Intrinsic.Control.CallSub(Connection, "CONNECT", False)
+
+GUI.FormUserViews.ddlDepartment.AddItem("")
+GUI.FormUserViews.ddlDepartment.AddItems("DataTable", "dtDepartments", "DEPT", "DEPT")
+F.Data.DataTable.Close("dtDepartments")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.LoadDepartmentDropDown.End
+
+Program.Sub.SetContextMenu.Start
+F.Intrinsic.Control.Try
+
+GUI.FormUserViews..ContextMenuCreate("ctxColumns")
+GUI.FormUserViews..ContextMenuAddItem("ctxColumns", "Reset", 0, "Reset")
+GUI.FormUserViews..ContextMenuSetItemEventHandler("ctxColumns", "Reset", "ResetColumns")
+GUI.FormUserViews.gsgcColumns.ContextMenuAttach("ctxColumns")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.SetContextMenu.End
+
+Program.Sub.ResetColumns.Start
+F.Intrinsic.Control.Try
+
+F.Intrinsic.Control.If(V.DataTable.dtColumns.Exists)
+	F.Data.DataTable.Close("dtColumns")
+F.Intrinsic.Control.EndIf
+
+GUI.FormUserViews.gsgcColumns.Visible(False)
+F.Intrinsic.Control.CallSub(LoadColumns)
+F.Intrinsic.Control.CallSub(LoadColumnGrid)
+GUI.FormUserViews.gsgcColumns.Visible(True)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.ResetColumns.End
+
+Program.Sub.cmdDelete_Click.Start
+F.Intrinsic.Control.Try
+
+V.Local.sSQL.Declare(String)
+
+F.Intrinsic.String.Build("delete from GCG_5259_USER_VIEWS where GS_GROUP = '{0}'", V.Screen.FormUserViews!txtGroup.Text.Trim, V.Local.sSQL)
+F.Intrinsic.Control.CallSub(Connection, "CONNECT", True)
+F.ODBC.Connection!Con.Execute(V.Local.sSQL)
+F.Intrinsic.Control.CallSub(Connection, "CONNECT", False)
+
+F.Intrinsic.UI.Msgbox("Layout successfully deleted.")
+F.Intrinsic.Control.CallSub(cmdClear_Click)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ErrorMessage, "ErrorNumber", V.Ambient.ErrorNumber, "ErrorDescription", V.Ambient.ErrorDescription, "SUBROUTINE", V.Ambient.CurrentSubroutine, "Callback", "FormUserViews_Unload")
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdDelete_Click.End
+
+Program.Sub.Comments.Start
+${$5$}$2.0.0.0$}$2
+${$6$}$apadilla$}$20211104084802627$}$Lag9STqBJOmNXSbd5+msRcBWPGz0aFqSwHruISZ+s7yVDZ53a0OJO95+VfCtOXTp5nSDwQH61XDeEW/M9FQGZQ==
+Program.Sub.Comments.End
