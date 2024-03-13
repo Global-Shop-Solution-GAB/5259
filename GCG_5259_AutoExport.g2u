@@ -1,0 +1,790 @@
+Program.Sub.ScreenSU.Start
+Gui.FormExportOptions..Create
+Gui.FormExportOptions..Caption("5259 Export Options")
+Gui.FormExportOptions..Size(5760,6000)
+Gui.FormExportOptions..MinX(0)
+Gui.FormExportOptions..MinY(0)
+Gui.FormExportOptions..Position(0,0)
+Gui.FormExportOptions..BackColor(-2147483633)
+Gui.FormExportOptions..MaxButton(False)
+Gui.FormExportOptions..MousePointer(0)
+Gui.FormExportOptions..Sizeable(False)
+Gui.FormExportOptions..Event(UnLoad,FormExportOptions_UnLoad)
+Gui.FormExportOptions.chkExportEnabled.Create(CheckBox)
+Gui.FormExportOptions.chkExportEnabled.Size(2265,360)
+Gui.FormExportOptions.chkExportEnabled.Position(120,75)
+Gui.FormExportOptions.chkExportEnabled.Caption("Enable 5259 Auto Export")
+Gui.FormExportOptions.chkExportEnabled.Event(Click,chkExportEnabled_Click)
+Gui.FormExportOptions.ddlSplit.Create(DropDownList)
+Gui.FormExportOptions.ddlSplit.Size(1860,330)
+Gui.FormExportOptions.ddlSplit.Position(3660,540)
+Gui.FormExportOptions.ddlSplit.Enabled(False)
+Gui.FormExportOptions.lblSplit.Create(Label,"Split by: ",True,705,255,0,2925,630,True,0,"Arial",8,-2147483633,0)
+Gui.FormExportOptions.lblExportPath.Create(Label,"Export Path: ",True,1005,255,0,90,1125,True,0,"Arial",8,-2147483633,0)
+Gui.FormExportOptions.txtExportPath.Create(TextBox,"",True,3990,300,0,1125,1035,False,0,"Arial",8,-2147483643,1)
+Gui.FormExportOptions.cmdFileBrowser.Create(Button)
+Gui.FormExportOptions.cmdFileBrowser.Size(375,375)
+Gui.FormExportOptions.cmdFileBrowser.Position(5175,990)
+Gui.FormExportOptions.cmdFileBrowser.Caption("^")
+Gui.FormExportOptions.cmdFileBrowser.Event(Click,cmdFileBrowser_Click)
+Gui.FormExportOptions.cmdFileBrowser.Enabled(False)
+Gui.FormExportOptions.cmdSave.Create(Button)
+Gui.FormExportOptions.cmdSave.Size(855,375)
+Gui.FormExportOptions.cmdSave.Position(45,5295)
+Gui.FormExportOptions.cmdSave.Caption("Save")
+Gui.FormExportOptions.cmdSave.Event(Click,cmdSave_Click)
+Gui.FormExportOptions.gsgcColumns.Create(GsGridControl)
+Gui.FormExportOptions.gsgcColumns.Size(5475,3840)
+Gui.FormExportOptions.gsgcColumns.Position(75,1425)
+Gui.FormExportOptions.gsgcColumns.Enabled(False)
+Gui.FormExportOptions.lblFrequency.Create(Label,"Frequency: ",True,960,255,0,90,630,True,0,"Arial",8,-2147483633,0)
+Gui.FormExportOptions.ddlFrequency.Create(DropDownList)
+Gui.FormExportOptions.ddlFrequency.Size(1695,330)
+Gui.FormExportOptions.ddlFrequency.Position(1125,540)
+Gui.FormExportOptions.ddlFrequency.Enabled(False)
+Program.Sub.ScreenSU.End
+
+Program.Sub.Preflight.Start
+Program.Sub.Preflight.End
+
+Program.Sub.Main.Start
+'GCG_5259_AutoExport.g2u
+'Trey S
+'05/08/2019
+'For Acero Precision
+'Quote 11194
+'Ticket FIT010-41820190820-7
+'This project will periodically export the 5259 dashboard to a specified network location
+'This is so Acero can distribute the schedule without needing more GS Licenses for the dashboard
+'Shop Floor Control > Admin > Scheduling Dashboard Auto Export [5259]
+
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+F.Intrinsic.Control.CallSub(SetIcon, "FORM", "FormExportOptions")
+
+'if called from online update, run export, else, run settings screen
+'38130 Post Online Update hook
+F.Intrinsic.Control.If(V.Caller.Hook, =, 38130)
+	
+	F.Intrinsic.Control.CallSub(IsRunning, "Project", "5259", "Task", "AutoExport")
+	F.Intrinsic.Control.CallSub(ExportCheck)
+	F.Intrinsic.Control.CallSub(ClearRunning, "Project", "5259", "Task", "AutoExport")
+F.Intrinsic.Control.Else
+	F.Intrinsic.Control.CallSub(LoadDropDowns)
+	F.Intrinsic.Control.CallSub(LoadSettings)
+	
+	GUI.FormExportOptions..Show
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.Main.End
+
+Program.Sub.chkExportEnabled_Click.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+V.Local.bEnabled.Declare(Boolean)
+
+V.Local.bEnabled.Set(V.Screen.FormExportOptions!chkExportEnabled.checkedAsBoolean)
+GUI.FormExportOptions.cmdFileBrowser.Enabled(V.Local.bEnabled)
+GUI.FormExportOptions.ddlFrequency.Enabled(V.Local.bEnabled)
+GUI.FormExportOptions.ddlSplit.Enabled(V.Local.bEnabled)
+GUI.FormExportOptions.gsgcColumns.Enabled(V.Local.bEnabled)
+GUI.FormExportOptions.txtExportPath.Enabled(V.Local.bEnabled)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.chkExportEnabled_Click.End
+
+Program.Sub.FormExportOptions_UnLoad.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+F.Intrinsic.Control.If(V.DataTable.dtColumns.Exists)
+	F.Data.DataTable.Close("dtColumns")
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.End
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.FormExportOptions_UnLoad.End
+
+Program.Sub.cmdFileBrowser_Click.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+V.Local.sPath.Declare(String)
+
+F.Intrinsic.UI.FolderBrowser("Select Export folder", V.Caller.Handle, V.Local.sPath)
+
+F.Intrinsic.Control.If(V.Local.sPath.IsNotCancel)
+	GUI.FormExportOptions.txtExportPath.Text(V.Local.sPath)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdFileBrowser_Click.End
+
+Program.Sub.cmdSave_Click.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+'check the settings, save them
+
+V.Local.bExists.Declare(Boolean)
+V.Local.bEnabled.Declare(Boolean)
+V.Local.sSplit.Declare(String)
+V.Local.sFreq.Declare(String)
+V.Local.sPath.Declare(String)
+V.Local.sColumns.Declare(String)
+
+F.Intrinsic.Control.If(V.Screen.FormExportOptions!chkExportEnabled.CheckedAsBoolean)
+	F.Intrinsic.Control.If(V.Screen.FormExportOptions!ddlFrequency.Text.Trim, =, "")
+		F.Intrinsic.UI.Msgbox("Frequency must be selected before saving.")
+		F.Intrinsic.Control.ExitSub
+	F.Intrinsic.Control.EndIf
+	
+	F.Intrinsic.Control.If(V.Screen.FormExportOptions!ddlSplit.Text.Trim, =, "")
+		F.Intrinsic.UI.Msgbox("Split must be selected before saving.")
+		F.Intrinsic.Control.ExitSub
+	F.Intrinsic.Control.EndIf
+	
+	F.Intrinsic.Control.If(V.Screen.FormExportOptions!txtExportPath.Text.Trim, =, "")
+		F.Intrinsic.UI.Msgbox("Export path must be selected before saving.")
+		F.Intrinsic.Control.ExitSub
+	F.Intrinsic.Control.EndIf
+	
+	F.Intrinsic.File.DirExists(V.Screen.FormExportOptions!txtExportPath.Text.Trim, V.Local.bExists)
+	F.Intrinsic.Control.If(V.Local.bExists.Not)
+		F.Intrinsic.UI.Msgbox("Invalid export path entered. Settings were not saved.")
+		F.Intrinsic.Control.ExitSub
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+GUI.FormExportOptions..Enabled(False)
+
+V.Local.bEnabled.Set(V.Screen.FormExportOptions!chkExportEnabled.CheckedAsBoolean)
+V.Local.sPath.Set(V.Screen.FormExportOptions!txtExportPath.Text.Trim)
+F.Data.DataView.Create("dtColumns", "dvString", 22)
+F.Data.DataView.ToString("dtColumns", "dvString", "Column*!*Enabled*!*Index", "@*@", "$&$", V.Local.sColumns)
+F.Data.DataView.Close("dtColumns", "dvString")
+
+F.Intrinsic.Control.SelectCase(V.Screen.FormExportOptions!ddlSplit.Text.Trim)
+	F.Intrinsic.Control.Case("None")
+		V.Local.sSplit.Set("NO")
+		
+	F.Intrinsic.Control.Case("Department")
+		V.Local.sSplit.Set("DT")
+		
+	F.Intrinsic.Control.Case("Work Group")
+		V.Local.sSplit.Set("WG")
+		
+	F.Intrinsic.Control.Case("Work Center")
+		V.Local.sSplit.Set("WC")
+		
+F.Intrinsic.Control.EndSelect
+
+F.Intrinsic.Control.SelectCase(V.Screen.FormExportOptions!ddlFrequency.Text.Trim)
+	F.Intrinsic.Control.Case("Weekly")
+		V.Local.sFreq.Set("WK")
+		
+	F.Intrinsic.Control.Case("Daily")
+		V.Local.sFreq.Set("DY")
+		
+	F.Intrinsic.Control.Case("Hourly")
+		V.Local.sFreq.Set("HR")
+		
+	F.Intrinsic.Control.Case("30 Minutes")
+		V.Local.sFreq.Set("30")
+		
+	F.Intrinsic.Control.Case("15 Minutes")
+		V.Local.sFreq.Set("15")
+		
+	F.Intrinsic.Control.Case("Online Update")
+		V.Local.sFreq.Set("OU")
+		
+F.Intrinsic.Control.EndSelect
+
+'get schema
+F.ODBC.Connection!Con.OpenCompanyConnection
+F.Data.DataTable.CreateFromSQL("dtSave", "Con", "select top 1 * from GCG_5259_EXPORT")
+
+F.Intrinsic.Control.If(V.DataTable.dtSave.RowCount, =, 0)
+	F.Data.DataTable.AddRow("dtSave", "Enabled", V.Local.bEnabled, "FREQ", V.Local.sFreq, "SPLIT", V.Local.sSplit, "PATH", V.Local.sPath, "Columns", V.Local.sColumns, "LAST_EXPORT", "1900-01-01", "ID", 0)
+F.Intrinsic.Control.Else
+	F.Data.DataTable.SetValue("dtSave", 0, "Enabled", V.Local.bEnabled, "FREQ", V.Local.sFreq, "SPLIT", V.Local.sSplit, "PATH", V.Local.sPath, "Columns", V.Local.sColumns)
+F.Intrinsic.Control.EndIf
+
+F.Data.DataTable.SaveToDB("dtSave", "Con", "GCG_5259_EXPORT", "ID", 256, "ENABLED@!@ENABLED*!*FREQ@!@FREQ*!*SPLIT@!@SPLIT*!*PATH@!@PATH*!*COLUMNS@!@COLUMNS*!*ID@!@ID*!*LAST_EXPORT@!@LAST_EXPORT")
+
+F.Data.DataTable.Close("dtSave")
+
+F.ODBC.Connection!Con.Close
+
+GUI.FormExportOptions..Enabled(True)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.cmdSave_Click.End
+
+Program.Sub.LoadDropDowns.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+GUI.FormExportOptions.ddlFrequency.AddItem("Weekly")
+GUI.FormExportOptions.ddlFrequency.AddItem("Daily")
+GUI.FormExportOptions.ddlFrequency.AddItem("Hourly")
+GUI.FormExportOptions.ddlFrequency.AddItem("30 Minutes")
+GUI.FormExportOptions.ddlFrequency.AddItem("15 Minutes")
+GUI.FormExportOptions.ddlFrequency.AddItem("Online Update")
+
+GUI.FormExportOptions.ddlSplit.AddItem("None")
+GUI.FormExportOptions.ddlSplit.AddItem("Department")
+GUI.FormExportOptions.ddlSplit.AddItem("Work Group")
+GUI.FormExportOptions.ddlSplit.AddItem("Work Center")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.LoadDropDowns.End
+
+Program.Sub.LoadSettings.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+V.Local.sSQL.Declare(String)
+
+F.ODBC.Connection!Con.OpenCompanyConnection
+
+V.Local.sSQL.Set("select * from GCG_5259_EXPORT")
+F.Data.DataTable.CreateFromSQL("dtSettings", "Con", V.Local.sSQL)
+F.ODBC.Connection!Con.Close
+
+F.Intrinsic.Control.If(V.DataTable.dtSettings.RowCount, <, 1)
+	F.Intrinsic.Control.CallSub(LoadColumns, "Columns", "")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.ElseIf(V.DataTable.dtSettings.RowCount, >, 1)
+	'should only be 1 record
+	F.Intrinsic.UI.Msgbox("Error: Multiple records for settings found in table. Deleting...")
+	F.ODBC.Connection!Con.OpenCompanyConnection
+	F.ODBC.Connection!Con.Execute("delete from GCG_5259_Export")
+	F.ODBC.Connection!Con.Close
+	F.Intrinsic.Control.CallSub(LoadColumns, "Columns", "")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+GUI.FormExportOptions.chkExportEnabled.Value(V.DataTable.dtSettings(0).ENABLED!FieldVal)
+GUI.FormExportOptions.txtExportPath.Text(V.DataTable.dtSettings(0).PATH!FieldValTrim)
+
+F.Intrinsic.Control.SelectCase(V.DataTable.dtSettings(0).FREQ!FieldValTrim)
+	F.Intrinsic.Control.Case("WK")
+		GUI.FormExportOptions.ddlFrequency.Text("Weekly")
+		
+	F.Intrinsic.Control.Case("DY")
+		GUI.FormExportOptions.ddlFrequency.Text("Daily")
+		
+	F.Intrinsic.Control.Case("HR")
+		GUI.FormExportOptions.ddlFrequency.Text("Hourly")
+	
+	F.Intrinsic.Control.Case("30")
+		GUI.FormExportOptions.ddlFrequency.Text("30 Minutes")
+		
+	F.Intrinsic.Control.Case("15")
+		GUI.FormExportOptions.ddlFrequency.Text("15 Minutes")
+		
+	F.Intrinsic.Control.Case("OU")
+		GUI.FormExportOptions.ddlFrequency.Text("Online Update")
+F.Intrinsic.Control.EndSelect
+
+F.Intrinsic.Control.SelectCase(V.DataTable.dtSettings(0).SPLIT!FieldValTrim)
+	F.Intrinsic.Control.Case("NO")
+		GUI.FormExportOptions.ddlSplit.Text("None")
+		
+	F.Intrinsic.Control.Case("DT")
+		GUI.FormExportOptions.ddlSplit.Text("Department")
+		
+	F.Intrinsic.Control.Case("WC")
+		GUI.FormExportOptions.ddlSplit.Text("Work Center")
+		
+	F.Intrinsic.Control.Case("WG")
+		GUI.FormExportOptions.ddlSplit.Text("Work Group")
+F.Intrinsic.Control.EndSelect
+
+'load columns
+F.Intrinsic.Control.CallSub(LoadColumns, "Columns", V.DataTable.dtSettings(0).COLUMNS!FieldValTrim)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.LoadSettings.End
+
+Program.Sub.LoadColumns.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+'load the column list
+
+V.Local.sColumns.Declare(String)
+V.Local.sTypes.Declare(String)
+V.Local.sFields.Declare(String)
+V.Local.sColumnList.Declare(String)
+V.Local.iCounter.Declare(Long)
+
+V.Local.sFields.Set("Column*!*Enabled*!*Index")
+V.Local.sTypes.Set("String*!*Boolean*!*Long")
+'V.Local.sColumnList.Set("Work Order*!*Seq.*!*WG*!*Dept*!*Part*!*Description*!*Customer*!*Customer PO*!*Start*!*Due Date*!*WO Due Date*!*WO Sched. Due Date*!*ECYT*!*Act. hrs.*!*Rem. Hrs.*!*Order*!*Run*!*Rem.*!*Prev. Compl. Qty.*!*WIP*!*Material*!*Notes*!*Tool*!*Gage*!*QA Note*!*Srt*!*Job*!*Suffix*!*Loc*!*Prev. Seq*!*Prev. Seq Closed*!*Priority*!*Start Date*!*Operation*!*Prev. Operation*!*Pallet*!*Scrap*!*Prog*!*ACYT*!*SU*!*RT*!*QA*!*MET*!*FAI*!*Runtime*!*Prev. Scrap*!*Rem. Seconds")
+V.Local.sColumnList.Set("WO*!*Seq.*!*WG*!*Dept*!*Part*!*Description*!*Customer*!*CUST PO*!*Start*!*OUTCELL*!*ORGDT*!*WO Due Date*!*WO Sched. Due Date*!*ESTCT*!*Act. hrs.*!*Rem. Hrs.*!*Order*!*Run*!*TO GO*!*Prev. Compl. Qty.*!*WIP*!*MAT*!*Notes*!*Srt*!*Job*!*Suffix*!*Loc*!*Prev. Seq*!*Prev. Seq Closed*!*Priority*!*Start Date*!*Operation*!*Prev. Operation*!*Pallet*!*Scrap*!*Prog*!*ACYT*!*SU*!*PUSH*!*QA*!*MET*!*FAI*!*Runtime*!*Prev. Scrap*!*REM*!*RT")
+
+V.Local.sColumns.Set(V.Args.Columns)
+F.Intrinsic.Control.If(V.Local.sColumns.Trim, =, "")
+	F.Data.DataTable.CreateFromString("dtColumnTemp", V.Local.sColumnList.UCase, "Column", "String", "***NODELIMITER***", "*!*")
+	F.Data.DataTable.AddColumn("dtColumnTemp", "Enabled", "Boolean", True)
+	F.Data.DataTable.AddColumn("dtColumnTemp", "Index", "Long")
+F.Intrinsic.Control.Else
+
+	'fix column name changes
+	F.Intrinsic.String.Replace(V.Local.sColumns, "Work Order@*@", "WO@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$Rem.@*@", "$&$TO GO@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$Material@*@", "$&$MAT@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$Rem. Seconds@*@", "$&$REM@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$Due Date@*@", "$&$CELL DATE@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$Orig. Due Date@*@", "$&$ORG WO DATE@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$Customer PO@*@", "$&$CUST PO@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$ECYT@*@", "$&$ESTCT@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$ORG WO DATE@*@", "$&$ORGDT@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$CELL DATE@*@", "$&$OUTCELL@*@", V.Local.sColumns)
+	F.Intrinsic.String.Replace(V.Local.sColumns, "$&$RT @*@", "$&$RT@*@", V.Local.sColumns)
+	
+	F.Data.DataTable.CreateFromString("dtColumnTemp", V.Local.sColumns.UCase, V.Local.sFields, V.Local.sTypes, "@*@", "$&$")
+	
+	F.Data.DataView.Create("dtColumnTemp", "dvNewColumns", 22, "COLUMN = 'PUSH'", "")
+	F.Intrinsic.Control.If(V.DataView.dtColumnTemp!dvNewColumns.RowCount, =, 0)
+		F.Data.DataTable.AddRow("dtColumnTemp", "COLUMN", "PUSH", "Enabled", True, "INDEX", 999)
+	F.Intrinsic.Control.EndIf
+	F.Data.DataView.Close("dtColumnTemp", "dvNewColumns")
+F.Intrinsic.Control.EndIf
+
+F.Data.DataView.Create("dtColumnTemp", "dvColumnTemp", 22, "[COLUMN] <> '' and [COLUMN] <> 'Tool' and [COLUMN] <> 'Gage' and [COLUMN] <> 'QA Note'", "INDEX")
+F.Data.DataTable.AddColumn("dtColumnTemp", "INDEX2", Long)
+'this junk is because set series is glitchy with dataviews... sometimes it will base it on the datatable order and not the dataview order
+F.Data.DataView.SetSeries("dtColumnTemp", "dvColumnTemp", "INDEX2", 0, 10)
+F.Data.DataView.ToDataTable("dtColumnTemp", "dvColumnTemp", "dtColumns", True)
+F.Data.DataTable.SetValueFormat("dtColumns", -1, "INDEX2", "INDEX", "")
+F.Data.DataTable.RemoveColumn("dtColumns", "INDEX2")
+F.Data.DataView.Close("dtColumnTemp", "dvColumnTemp")
+F.Data.DataTable.Close("dtColumnTemp")
+
+F.Intrinsic.Control.CallSub(LoadGrid)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.LoadColumns.End
+
+Program.Sub.LoadGrid.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+GUI.FormExportOptions.gsgcColumns.AddGridviewFromDataTable("gvColumns", "dtColumns")
+
+GUI.FormExportOptions.gsgcColumns.SetColumnProperty("gvColumns", "COLUMN", "Caption", "Column")
+GUI.FormExportOptions.gsgcColumns.SetColumnProperty("gvColumns", "COLUMN", "HeaderFontBold", True)
+GUI.FormExportOptions.gsgcColumns.SetColumnProperty("gvColumns", "COLUMN", "AllowEdit", False)
+GUI.FormExportOptions.gsgcColumns.SetColumnProperty("gvColumns", "COLUMN", "ReadOnly", True)
+
+GUI.FormExportOptions.gsgcColumns.SetColumnProperty("gvColumns", "Enabled", "Caption", "Enabled")
+GUI.FormExportOptions.gsgcColumns.SetColumnProperty("gvColumns", "Enabled", "HeaderFontBold", True)
+GUI.FormExportOptions.gsgcColumns.SetColumnProperty("gvColumns", "Enabled", "AllowEdit", True)
+GUI.FormExportOptions.gsgcColumns.SetColumnProperty("gvColumns", "Enabled", "ReadOnly", False)
+
+GUI.FormExportOptions.gsgcColumns.SetColumnProperty("gvColumns", "Index", "Caption", "Index")
+GUI.FormExportOptions.gsgcColumns.SetColumnProperty("gvColumns", "Index", "HeaderFontBold", True)
+GUI.FormExportOptions.gsgcColumns.SetColumnProperty("gvColumns", "Index", "AllowEdit", True)
+GUI.FormExportOptions.gsgcColumns.SetColumnProperty("gvColumns", "Index", "ReadOnly", False)
+
+GUI.FormExportOptions.gsgcColumns.SetColumnProperty("gvColumns", "Index", "SortOrder", "Ascending")
+
+GUI.FormExportOptions.gsgcColumns.MainView("gvColumns")
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.UI.Msgbox(V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.LoadGrid.End
+
+Program.Sub.ExportCheck.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+'load settings, run export if neccessary
+
+V.Local.sSQL.Declare(String)
+V.Local.bEnabled.Declare(Boolean)
+V.Local.bExport.Declare(Boolean, False)
+V.Local.sInterval.Declare(String)
+V.Local.iDiff.Declare(Long)
+V.Local.dDate.Declare(Date)
+V.Local.dDate2.Declare(Date)
+V.Local.sMessage.Declare(String)
+V.Local.sDateTimeString.Declare(String)
+V.Local.iLimit.Declare(Long, 1)
+
+V.Local.sSQL.Set("select * from GCG_5259_EXPORT")
+
+F.ODBC.Connection!Con.OpenCompanyConnection
+F.Data.DataTable.CreateFromSQL("dtSettings", "Con", V.Local.sSQL, True)
+F.ODBC.Connection!Con.Close
+
+F.Intrinsic.Control.If(V.DataTable.dtSettings.RowCount, !=, 1)
+	F.Data.DataTable.Close("dtSettings")
+	F.Intrinsic.Control.CallSub(ClearRunning, "Project", "5259", "Task", "AutoExport")
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndIf
+
+V.Local.bEnabled.Set(V.DataTable.dtSettings(0).Enabled!FieldVal)
+F.Intrinsic.Control.If(V.Local.bEnabled.Not)
+	F.Data.DataTable.Close("dtSettings")
+	F.Intrinsic.Control.CallSub(ClearRunning, "Project", "5259", "Task", "AutoExport")
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.If(V.DataTable.dtSettings(0).FREQ!FieldValTrim, =, "OU")
+	V.Local.bExport.Set(True)
+	
+F.Intrinsic.Control.Else
+	F.Intrinsic.Control.SelectCase(V.DataTable.dtSettings(0).FREQ!FieldValTrim)
+		F.Intrinsic.Control.Case("WK")
+			V.Local.sInterval.Set("WW")
+		F.Intrinsic.Control.Case("DY")
+			V.Local.sInterval.Set("D")
+		F.Intrinsic.Control.Case("HR")
+			V.Local.sInterval.Set("H")
+		F.Intrinsic.Control.Case("30")
+			V.Local.sInterval.Set("N")
+			V.Local.iLimit.Set(30)
+		F.Intrinsic.Control.Case("15")
+			V.Local.sInterval.Set("N")
+			V.Local.iLimit.Set(15)
+		F.Intrinsic.Control.CaseElse
+			'shouldn't happen, these values are maintained in the maintenance program
+			'F.Intrinsic.UI.Msgbox("Error: Invalid Frequencey set")
+			V.Local.sMessage.Set("Error: Invalid Frequencey set")
+			F.Intrinsic.Control.CallSub(UnattendedErrorMessage, "Project", "5259", "ProjectTitle", "5259 Movable Dispatch List Auto Export", "Message", V.Local.sMessage)
+			F.Intrinsic.Control.CallSub(ClearRunning, "Project", "5259", "Task", "AutoExport")
+			F.Intrinsic.Control.End
+	F.Intrinsic.Control.EndSelect
+	
+	V.Local.dDate.Set(V.DataTable.dtSettings(0).LAST_EXPORT!FieldVal)
+	F.Intrinsic.String.Build("{0} {1}", V.Ambient.Date, V.Ambient.Time, V.Local.sDateTimeString)
+	V.Local.dDate2.Set(V.Local.sDateTimeString)
+	F.Intrinsic.Date.DateDiff(V.Local.sInterval, V.Local.dDate, V.Local.dDate2, V.Local.iDiff)
+	F.Intrinsic.Control.If(V.Local.iDiff, >, V.Local.iLimit)
+		V.Local.bExport.Set(True)
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.If(V.Local.bExport)
+	F.Intrinsic.Control.CallSub(Export)
+F.Intrinsic.Control.Else
+	F.Data.DataTable.Close("dtSettings")
+	F.Intrinsic.Control.CallSub(ClearRunning, "Project", "5259", "Task", "AutoExport")
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.Control.CallSub(UnattendedErrorMessage, "Project", "5259", "ProjectTitle", "5259 Movable Dispatch List Auto Export", "Message", V.Local.sError)
+	F.Intrinsic.Control.CallSub(ClearRunning, "Project", "5259", "Task", "AutoExport")
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.ExportCheck.End
+
+Program.Sub.Export.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+V.Local.sColumns.Declare(String)
+V.Local.sSplit.Declare(String)
+V.Local.sExportPath.Declare(String)
+V.Local.sScript.Declare(String)
+V.Local.bExists.Declare(Boolean)
+V.Local.sSQL.Declare(String)
+
+V.Local.sColumns.Set(V.DataTable.dtSettings(0).COLUMNS!FieldValTrim)
+V.Local.sSplit.Set(V.DataTable.dtSettings(0).Split!FieldValTrim)
+V.Local.sExportPath.Set(V.DataTable.dtSettings(0).PATH!FieldValTrim)
+
+F.Intrinsic.String.Replace(V.Caller.ScriptFile, "GCG_5259_AutoExport.g2u", "GCG_5259_Resched_Utility.g2u", V.Local.sScript)
+F.Intrinsic.File.Exists(V.Local.sScript, V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists.Not)
+	F.Intrinsic.UI.Msgbox("Error: Change Order Entry script not found.")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.CallSub(LOGGINGCheckDir, "Path", V.Local.sExportPath)
+
+V.Local.sColumns.Set(V.Local.sColumns.UCase)
+F.Global.General.SetPassedDataElement("COLUMNS", V.Local.sColumns)
+F.Global.General.SetPassedDataElement("SPLIT", V.Local.sSplit)
+F.Global.General.SetPassedDataElement("PATH", V.Local.sExportPath)
+
+F.Intrinsic.Control.CallSub(LoggingAddLog, "Project", 5259, "Message", "Running Export...")
+F.Global.General.CallSyncGAS(V.Local.sScript)
+
+F.ODBC.Connection!Con.OpenCompanyConnection
+F.ODBC.Connection!Con.Execute("update GCG_5259_EXPORT set LAST_EXPORT = now()")
+F.ODBC.Connection!Con.Close
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.Control.CallSub(UnattendedErrorMessage, "Project", "5259", "ProjectTitle", "5259 Movable Dispatch List Auto Export", "Message", V.Local.sError)
+	F.Intrinsic.Control.CallSub(ClearRunning, "Project", "5259", "Task", "AutoExport")
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.Export.End
+
+Program.Sub.LOGGINGCheckDir.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+'check if the given import directories exist
+'create them if they don't
+
+V.Local.sPath.Declare(String)
+V.Local.bExists.Declare(Boolean)
+
+V.Local.sPath.Set(V.Args.Path)
+F.Intrinsic.File.DirExists(V.Local.sPath, V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists.Not)
+	F.Intrinsic.File.CreateDir(V.Local.sPath)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ClearRunning, "Project", "5259", "Task", "AutoExport")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndTry
+Program.Sub.LOGGINGCheckDir.End
+
+Program.Sub.LOGGINGCheckFile.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+'check if the given file exists
+'create it if it doesn't
+
+V.Local.sFile.Declare(String)
+V.Local.bExists.Declare(Boolean)
+V.Local.sContents.Declare(String)
+
+V.Local.sFile.Set(V.Args.File)
+F.Intrinsic.File.Exists(V.Local.sFile, V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists.Not)
+	F.Intrinsic.String.Build("{0} {1}: Log Start", V.Ambient.Date.FormatYYYY-MM-DD, V.Ambient.Time.Format!HH:NN:SS, V.Local.sContents)
+	F.Intrinsic.File.String2File(V.Local.sFile, V.Local.sContents)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ClearRunning, "Project", "5259", "Task", "AutoExport")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndTry
+Program.Sub.LOGGINGCheckFile.End
+
+Program.Sub.LOGGINGAddLog.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+'pass a project #, and a message
+'date and time will be automatically added
+
+V.Local.sProject.Declare(String)
+V.Local.sMessage.Declare(String)
+V.Local.bExists.Declare(Boolean)
+V.Local.sPath.Declare(String)
+V.Local.sFile.Declare(String)
+V.Local.sContents.Declare(String)
+
+'these error messages are for developers, should never happen in finished product
+F.Intrinsic.Variable.ArgExists("Project", V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists.Not)
+	F.Intrinsic.UI.Msgbox("Error: LOGGINGAddLog subroutine requires argument 'Project'")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Variable.ArgExists("Message", V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists.Not)
+	F.Intrinsic.UI.Msgbox("Error: LOGGINGAddLog subroutine requires argument 'Message'")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndIf
+
+V.Local.sProject.Set(V.Args.Project.Trim)
+V.Local.sMessage.Set(V.Args.Message.Trim)
+
+F.Intrinsic.File.MakeFilenameFriendly(V.Local.sProject, V.Local.sProject)
+F.Intrinsic.String.Build("{0}\Custom\{1}", V.Caller.GlobalDir, V.Local.sProject, V.Local.sPath)
+F.Intrinsic.Control.CallSub(LOGGINGCheckDir, "Path", V.Local.sPath)
+
+F.Intrinsic.String.Build("{0}\{1}_Log.txt", V.Local.sPath, V.Local.sProject, V.Local.sFile)
+F.Intrinsic.Control.CallSub(LOGGINGCheckFile, "File", V.Local.sFile)
+
+F.Intrinsic.String.Build("{0} {1}: {2}", V.Ambient.Date.FormatYYYY-MM-DD, V.Ambient.Time.Format!HH:NN:SS, V.Local.sMessage, V.Local.sContents)
+F.Intrinsic.File.Append2FileNewLine(V.Local.sFile, V.Local.sContents)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ClearRunning, "Project", "5259", "Task", "AutoExport")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndTry
+Program.Sub.LOGGINGAddLog.End
+
+Program.Sub.UnattendedErrorMessage.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+F.Intrinsic.UI.InvokeWaitDialog(V.Args.Message, V.Args.ProjectTitle)
+F.Intrinsic.UI.Sleep(10)
+F.Intrinsic.UI.CloseWaitDialog
+
+F.Intrinsic.Control.CallSub(LOGGINGAddLog, "Project", V.Args.Project, "Message", V.Args.Message)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.Control.CallSub(ClearRunning, "Project", "5259", "Task", "AutoExport")
+	F.Intrinsic.Control.ExitSub
+F.Intrinsic.Control.EndTry
+Program.Sub.UnattendedErrorMessage.End
+
+Program.Sub.IsRunning.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+'check if the process is already running
+'store PID in a text file
+
+V.Local.bExists.Declare(Boolean)
+V.Local.sDir.Declare(String)
+V.Local.sCurrentPIDProcess.Declare(String)
+V.Local.sFile.Declare(String)
+V.Local.sProject.Declare(String)
+V.Local.sTask.Declare(String)
+
+V.Local.sProject.Set(V.Args.Project)
+V.Local.sTask.Set(V.Args.Task)
+
+F.Intrinsic.String.Build("{0}\Custom\{1}\", V.Caller.GlobalDir, V.Local.sProject, V.Local.sDir)
+F.Intrinsic.Control.CallSub(LOGGINGCheckDir, "Path", V.Local.sDir)
+
+F.Intrinsic.String.Build("{0}\{1}_Running.txt", V.Local.sDir, V.Local.sTask, V.Local.sFile)
+F.Intrinsic.File.Exists(V.Local.sFile, V.Local.bExists)
+
+F.Intrinsic.Control.If(V.Local.bExists.Not)
+	'program is not running
+	'Create Program Status file to let it know its running
+	F.Intrinsic.File.String2File(V.Local.sFile, V.Ambient.PID)
+F.Intrinsic.Control.Else
+ 	'then the file exists: get the PID from the file to see if the process is still running
+	F.Intrinsic.File.File2String(V.Local.sFile, V.Local.sCurrentPIDProcess)
+	F.Intrinsic.Task.PIDRunning(V.Local.sCurrentPIDProcess, V.Local.bExists)
+	F.Intrinsic.Control.If(V.Local.bExists)
+		'the the program is running- don't start new process
+		F.Intrinsic.Control.End
+	F.Intrinsic.Control.Else
+		'the program has stopped, but did not delete the file. Delete the file and create a new file for current run
+		F.Intrinsic.File.DeleteFile(V.Local.sFile)
+		F.Intrinsic.File.String2File(V.Local.sFile, V.Ambient.PID)
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.Control.CallSub(UnattendedErrorMessage, "Project", "5259", "ProjectTitle", "5259 Movable Dispatch List Auto Export", "Message", V.Local.sError)
+	F.Intrinsic.Control.CallSub(ClearRunning, "Project", "5259", "Task", "AutoExport")
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.IsRunning.End
+
+Program.Sub.ClearRunning.Start
+'delete the is running file, so the next time the program runs it knows it isn't currently running
+
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+V.Local.bExists.Declare(Boolean)
+V.Local.sDir.Declare(String)
+V.Local.sFile.Declare(String)
+V.Local.sProject.Declare(String)
+V.Local.sTask.Declare(String)
+
+V.Local.sProject.Set(V.Args.Project)
+V.Local.sTask.Set(V.Args.Task)
+
+F.Intrinsic.String.Build("{0}\Custom\{1}\", V.Caller.GlobalDir, V.Local.sProject, V.Local.sDir)
+F.Intrinsic.Control.CallSub(LOGGINGCheckDir, "Path", V.Local.sDir)
+
+F.Intrinsic.String.Build("{0}\{1}_Running.txt", V.Local.sDir, V.Local.sTask, V.Local.sFile)
+F.Intrinsic.File.Exists(V.Local.sFile, V.Local.bExists)
+
+F.Intrinsic.Control.If(V.Local.bExists)
+	F.Intrinsic.File.DeleteFile(V.Local.sFile)
+F.Intrinsic.Control.EndIf
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.Control.CallSub(UnattendedErrorMessage, "Project", "5259", "ProjectTitle", "5259 Movable Dispatch List Auto Export", "Message", V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.ClearRunning.End
+
+Program.Sub.SetIcon.Start
+F.Intrinsic.Control.Try
+V.Local.sError.Declare(String)
+
+V.Local.sForm.Declare(String)
+V.Local.bExists.Declare(Boolean)
+V.Local.sIcon.Declare(String)
+
+V.Local.sForm.Set(V.Args.FORM)
+
+F.Intrinsic.String.Build("{0}\ART\gss2.ico",V.Caller.GlobalDir,v.Local.sIcon)
+F.Intrinsic.File.Exists(V.Local.sIcon, V.Local.bExists)
+F.Intrinsic.Control.If(V.Local.bExists.Not)
+	F.Intrinsic.String.Build("{0}\GAB\GAS\gss2.ico",V.Caller.PluginsDir,v.Local.sIcon)
+	F.Intrinsic.File.Exists(V.Local.sIcon, V.Local.bExists)
+	F.Intrinsic.Control.If(V.Local.bExists.Not)
+		F.Intrinsic.Control.ExitSub
+	F.Intrinsic.Control.EndIf
+F.Intrinsic.Control.EndIf
+
+Gui.[V.Local.sForm]..Icon(V.Local.sIcon)
+
+F.Intrinsic.Control.Catch
+	F.Intrinsic.String.Build("Project: {0}{1}{1}Subroutine: {2}{1}Error Occurred {3} with description {4}{1}{1}GAB Version: {5}",V.Caller.ScriptFile,V.Ambient.Newline,V.Ambient.CurrentSubroutine,V.Ambient.ErrorNumber,V.Ambient.ErrorDescription,V.Ambient.GABVersion,V.Local.sError)
+	F.Intrinsic.Control.CallSub(UnattendedErrorMessage, "Project", "5259", "ProjectTitle", "5259 Movable Dispatch List Auto Export", "Message", V.Local.sError)
+	F.Intrinsic.Control.End
+F.Intrinsic.Control.EndTry
+Program.Sub.SetIcon.End
+
+
+
