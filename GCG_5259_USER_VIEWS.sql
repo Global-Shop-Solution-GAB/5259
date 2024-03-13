@@ -1,0 +1,12 @@
+-- Database: GLOBALPLA Metadata version: 1 Exported: Sep 18, 2019
+-- Begin Tables
+SET LEGACYTYPESALLOWED = ON;
+-- Begin Multi-Line Statement
+CREATE TABLE "GCG_5259_USER_VIEWS" USING 'GCG_5259_USER_VIEWS.mkd' PAGESIZE=4096 (
+ "GS_GROUP" CHAR(20),
+ "ADMIN" BIT DEFAULT '0' NOT NULL,
+ "COLUMNS" LONGVARCHAR,
+ "DEPARTMENT" CHAR(10) );
+-- End Multi-Line Statement
+SET LEGACYTYPESALLOWED = OFF;
+-- End Tables
